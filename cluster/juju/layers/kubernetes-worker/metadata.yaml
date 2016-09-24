@@ -18,6 +18,9 @@ provides:
   sdn-plugin:
     interface: sdn-plugin
     scope: container
+  node-host:
+    interface: node-local
+    scope: container
 requires:
   kube-api-endpoint:
     interface: http

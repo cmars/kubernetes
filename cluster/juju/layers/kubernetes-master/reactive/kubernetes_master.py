@@ -1,3 +1,4 @@
+import json
 import os
 import socket
 import string
@@ -21,6 +22,7 @@ from charms.kubernetes.flagmanager import FlagManager
 from charmhelpers.core import hookenv
 from charmhelpers.core import host
 from charmhelpers.core.templating import render
+from charmhelpers.core.unitdata import kv
 
 
 @hook('upgrade-charm')
@@ -290,6 +292,43 @@ def create_self_config(ca, client):
     '''Create a kubernetes configuration for the master unit.'''
     server = 'https://{0}:{1}'.format(hookenv.unit_get('public-address'), 6443)
     build_kubeconfig(server)
+
+
+@when('workload.load')
+def load_workload(kwl):
+    svc_file = kwl.service_file()
+    try:
+        call(['kubectl', 'create', '-f', svc_file])
+        remove_state('workload.load')
+    finally:
+        os.unlink(svc_file)
+ 
+
+@when('workload.status')
+def stat_workload(kwl):
+    if not kwl:
+        return
+    svc_name = kwl.service_name()
+    if not svc_name:
+        return
+    status_json = check_call(['kubectl', 'get', 'svc', svc_name, '-o', 'json'],
+        shell=False, universal_newlines=True)
+    # TODO(cmars): trigger `kubectl refresh` on remote upgrade-charm?
+    status = json.loads(status_json)
+    kwl.status(service_status=status)
+    # TODO(cmars): Leave this 'status' state set for periodic polling?
+    #              It'd be better to trigger off of kubernetes hooks...
+    #remove_state('workload.status')
+
+
+@when('workload.unload')
+def unload_workload(kwl):
+    svc_file = kwl.service_file()
+    try:
+        call(['kubectl', 'delete', '-f', svc_file])
+        remove_state('workload.unload')
+    finally:
+        os.unlink(svc_file)
 
 
 def launch_dns():

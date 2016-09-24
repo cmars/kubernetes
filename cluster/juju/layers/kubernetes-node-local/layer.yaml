@@ -1,0 +1,11 @@
+includes:
+    - layer:kubernetes-workload
+defines:
+    image-files:
+        description: Paths to docker image files relative to charm_dir (fat charm)
+        type: array
+        default: []
+    image-resources:
+        description: Resource names of docker image files
+        type: array
+        default: []

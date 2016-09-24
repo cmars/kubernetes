@@ -29,6 +29,8 @@ requires:
     interface: etcd
   loadbalancer:
     interface: public-address
+  workload:
+    interface: kubernetes-workload
 resources:
   kubernetes:
     type: file

@@ -1,0 +1,37 @@
+# kubernetes-workload
+
+This layer is used for charms that deploy a service into kubernetes.
+
+## Developing a kubernetes workload charm.
+
+Add this layer.
+
+Add `workload.yaml` to the charm. This can consist of multiple pods,
+controllers and a service.
+
+Set the `service` option to the service name that is created by your charm.
+
+The `workload.service.changed` reactive state is set when the
+service status is updated. Use helper functions to obtain the nodeport and
+other details of your Kubernetes service in your other hooks.
+
+## Deploying a kubernetes workload charm.
+
+Given a kubernetes bundle deployment, such as `cs:~lazypower/canonical-kubernetes`,
+
+Deploy your charm.
+
+    $ juju deploy foo
+
+Relate it to kubernetes-master.
+
+    $ juju add-relation kubernetes-master foo
+
+This should add your service to the kubernetes cluster. Depending on the
+relation hooks your charm & service support, you may relate your charm to other
+Juju applications. These may be other Kubernetes workload charms as well, or
+Juju applications running outside Kubernetes.
+
+However, service ports will need to be exposed via NodePort or LoadBalancer in
+order to relate them to Juju applications running outside Kubernetes.
+

@@ -1,0 +1,7 @@
+includes:
+    - layer:basic
+    - interface:kubernetes-workload
+defines:
+    service:
+        description: Kubernetes service name deployed by this charm
+        type: string

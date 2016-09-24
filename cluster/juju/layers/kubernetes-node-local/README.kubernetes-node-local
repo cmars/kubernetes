@@ -1,0 +1,30 @@
+# kubernetes-node-local
+
+This layer is for kubernetes-workload charms that need node-local access to the
+container, for volume access. This is useful for configuring containers via
+Juju hooks -- writing config files with templates, for example.
+
+Not all kubernetes service charms may need this layer. For example, services
+that configure via consul or etcd do not need node-local access.
+
+## Developing a node-local charm
+
+See `README.kubernetes-workload` in `layer:kubernetes-workload`, which this
+layer includes.
+
+This layer will create a subordinate that co-locates with kubernetes-worker.
+
+Include this layer, `layer:kubernetes-node-local` instead of
+`layer:kubernetes-workload` (it's included). You'll then want to declare a
+volume in your pod(s) that expose configuration and other required directories
+on the kubernetes-worker host.
+
+Use the helper functions (TODO) to locate the path to your workload's
+bind-mounted volume on the node host, which is where the charm hooks will
+execute.
+
+## Deployment
+
+In addition to relating to kubernetes-master, also add a relation to
+kubernetes-worker. This will place a subordinate on all workers with node-local
+access.

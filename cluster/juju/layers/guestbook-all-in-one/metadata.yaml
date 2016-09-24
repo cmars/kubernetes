@@ -1,0 +1,10 @@
+name: guestbook
+summary: The guestbook/all-in-one kubernetes example
+maintainer: Casey Marshall <casey.marshall@canonical.com>
+description: |
+  This charm demonstrates modeling a Kubernetes service.
+provides:
+  website:
+    interface: http
+series:
+  - xenial

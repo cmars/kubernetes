@@ -1,0 +1,3 @@
+provides:
+  workload:
+    interface: kubernetes-workload

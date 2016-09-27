@@ -6,7 +6,7 @@ cd ${HERE}
 export CHARM_DIR=${HERE}/builds
 
 # Generate local bundle. `snap install j2`. Needs CHARM_DIR set.
-j2 local-kubernetes.yaml.base > local-kubernetes.yaml
+j2 local-bundle.yaml.j2 > local-bundle.yaml
 
 function waitfor_uvt_kvm {
 	m=$1
@@ -52,8 +52,7 @@ fi
 juju deploy ${CHARM_DIR}/kubernetes-worker --to 0 --resource kubernetes=kubernetes-worker.tar.gz
 juju add-unit kubernetes-worker --to 1
 
-juju add-machine
-juju deploy ${CHARM_DIR}/kubernetes-master --to 2 --resource kubernetes=kubernetes-master.tar.gz
+sleep 5
 
 # Everything else can get autoplaced onto LXD in the bundle.
-juju deploy local-kubernetes.yaml
+juju deploy local-bundle.yaml

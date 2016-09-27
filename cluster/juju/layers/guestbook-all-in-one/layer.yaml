@@ -1,2 +1,5 @@
 includes:
     - layer:kubernetes-node-local
+options:
+    kubernetes-workload:
+        service: frontend

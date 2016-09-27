@@ -12,8 +12,14 @@ description: |
 tags:
   - infrastructure
 subordinate: false
+provides:
+  node-host:
+    interface: node-local
+    scope: container
 requires:
-   etcd:
-     interface: etcd
+  etcd:
+    interface: etcd
+  workload:
+    interface: kubernetes-workload
 series: 
   - xenial

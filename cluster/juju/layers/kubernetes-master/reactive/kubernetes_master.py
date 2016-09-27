@@ -294,40 +294,40 @@ def create_self_config(ca, client):
     build_kubeconfig(server)
 
 
-@when('workload.load')
+@when('workload.load', 'kube-dns.available')
 def load_workload(kwl):
-    svc_file = kwl.service_file()
     try:
+        svc_file = kwl.service_file()
+        if not svc_file:
+            return
         call(['kubectl', 'create', '-f', svc_file])
-        remove_state('workload.load')
+        # TODO(cmars): trigger `kubectl refresh` if already created? On remote upgrade-charm?
+        stat_workload(kwl)
+        set_state('workload.loaded')
     finally:
+        remove_state('workload.load')
         os.unlink(svc_file)
  
 
-@when('workload.status')
 def stat_workload(kwl):
-    if not kwl:
-        return
     svc_name = kwl.service_name()
     if not svc_name:
         return
-    status_json = check_call(['kubectl', 'get', 'svc', svc_name, '-o', 'json'],
+    status_json = check_output(['kubectl', 'get', 'svc', svc_name, '-o', 'json'],
         shell=False, universal_newlines=True)
-    # TODO(cmars): trigger `kubectl refresh` on remote upgrade-charm?
-    status = json.loads(status_json)
-    kwl.status(service_status=status)
-    # TODO(cmars): Leave this 'status' state set for periodic polling?
-    #              It'd be better to trigger off of kubernetes hooks...
-    #remove_state('workload.status')
+    kwl.status(service_status=status_json)
+    # TODO(cmars): Periodic polling for status changes? Trigger off of kubernetes hooks?
 
 
 @when('workload.unload')
 def unload_workload(kwl):
-    svc_file = kwl.service_file()
     try:
+        svc_file = kwl.service_file()
+        if not svc_file:
+            return
         call(['kubectl', 'delete', '-f', svc_file])
-        remove_state('workload.unload')
     finally:
+        remove_state('workload.unload')
         os.unlink(svc_file)
 
 

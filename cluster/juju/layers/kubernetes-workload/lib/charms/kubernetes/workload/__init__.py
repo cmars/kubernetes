@@ -8,9 +8,9 @@ def service_name():
 
 
 def node_port(status=None):
-    # TODO: match nodePort based on tags if multiple? map them by tag?
     if status is None:
         status = service_status()
+    # TODO: match nodePort based on tags if multiple? map them by tag?
     for port in status.get('spec', {}).get('ports', []):
         # TODO(cmars): tagging for services with multiple ports?
         nodePort = port.get('nodePort')

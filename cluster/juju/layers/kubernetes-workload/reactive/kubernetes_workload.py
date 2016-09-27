@@ -1,6 +1,7 @@
 import os
 
 from charmhelpers.core import hookenv
+from charmhelpers.core.unitdata import kv
 from charms.reactive import when, set_state, remove_state
 from charms.reactive.helpers import data_changed
 
@@ -11,19 +12,30 @@ from charms.kubernetes.workload import service_name, node_port
 #@hook('upgrade-charm')...
 
 
-@when('kubernetes-workload.create')
+@when('workload.create')
 def workload_create(k):
-    service_file = os.path.join(hookenv.charm_dir(), 'workload.yaml')
-    with open(service_file, 'r') as f:
-        contents = f.read()
-        k.set_service(name=service_name(), contents=contents)
-    remove_state('kubernetes-workload.create')
+    try:
+        service_file = os.path.join(hookenv.charm_dir(), 'workload.yaml')
+        with open(service_file, 'r') as f:
+            contents = f.read()
+            k.set_service(name=service_name(), contents=contents)
+    finally:
+        remove_state('workload.create')
 
 
-@when('kubernetes-workload.updated')
-def workload_updated(k):
-    status = k.service_status()
-    if data_changed('kubernetes-workload.service.status', status):
-        if node_port(status=status):
-            set_state('kubernetes-workload.service.available')
-    remove_state('kubernetes-workload.updated')
+@when('workload.update')
+def workload_update(k):
+    try:
+        status = k.service_status()
+        db = kv()
+        db.set('workload.service.status', status)
+        if status:
+            set_state('workload.service.available')
+    finally:
+        remove_state('workload.update')
+
+
+@when('workload.delete')
+def workload_delete(_):
+    remove_state('workload.service.available')
+    remove_state('workload.delete')

@@ -1,7 +1,8 @@
 from subprocess import check_call
 
 from charmhelpers.core import hookenv
-from charms.reactive import when, when_not, set_state
+from charmhelpers.core.unitdata import kv
+from charms.reactive import when, when_not, set_state, remove_state
 from charms import layer
 
 from charms.kubernetes.workload import node_port
@@ -28,5 +29,9 @@ def load_image_rc(rc):
 
 @when('workload.service.available')
 def service_available():
-    # TODO(cmars): close port on depart
-    hookenv.open_port(node_port())
+    try:
+        port = node_port()
+        if port:
+            hookenv.open_port(port)
+    finally:
+        remove_state('workload.service.available')

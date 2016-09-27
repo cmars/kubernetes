@@ -1,26 +1,23 @@
+import os
+import tempfile
+
 from charms.reactive import RelationBase, scopes, hook
 
 
 class KubernetesWorkloadRequires(RelationBase):
     scope = scopes.SERVICE
 
-    @hook('{requires:workload}-relation-joined')
+    @hook('{requires:kubernetes-workload}-relation-{joined,changed}')
     def joined(self):
-        conv = self.conversation()
-        if conv:
-            conv.set_state('{relation-name}.load')
+        conv = self._maybe_conversation()
+        if conv and conv.get_remote('service_file'):
+            conv.set_state('{relation_name}.load')
 
-    @hook('{requires:workload}-relation-changed')
-    def changed(self):
-        conv = self.conversation()
-        if conv:
-            conv.set_state('{relation-name}.status')
-
-    @hook('{requires:workload}-relation-departed')
+    @hook('{requires:kubernetes-workload}-relation-departed')
     def departed(self):
         conv = self._maybe_conversation()
-        if conv:
-            conv.set_state('{relation-name}.unload')
+        if conv and conv.get_remote('service_file'):
+            conv.set_state('{relation_name}.unload')
 
     def _maybe_conversation(self):
         conv = None
@@ -31,11 +28,9 @@ class KubernetesWorkloadRequires(RelationBase):
         return conv
 
     def service_name(self):
-        conv = self.conversation()
-        return conv.get_remote('service_name')
+        return self.get_remote('service_name')
 
-    def service_file(self, contents):
-        conv = self.conversation()
+    def service_file(self):
         contents = self.get_remote('service_file')
         return self._temp_file(contents)
 
@@ -43,12 +38,12 @@ class KubernetesWorkloadRequires(RelationBase):
         tmpf = None
         try:
             tmpf = tempfile.NamedTemporaryFile(delete=False)
-            with open(tmpf, 'wb') as f:
-                f.write(contents)
-            return tmpf
+            with open(tmpf.name, 'w') as f:
+                print(contents, file=f)
+            return tmpf.name
         except Exception:
             if tmpf:
-                os.unlink(tmpf)
+                os.unlink(tmpf.name)
             raise
  
     def status(self, service_status=None):

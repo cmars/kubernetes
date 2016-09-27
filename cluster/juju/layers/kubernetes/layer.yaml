@@ -1,4 +1,11 @@
-includes: ['layer:leadership', 'layer:docker', 'layer:flannel', 'layer:storage', 'layer:tls', 'interface:etcd']
+includes:
+  - 'layer:leadership'
+  - 'layer:docker'
+  - 'layer:flannel'
+  - 'layer:storage'
+  - 'layer:tls'
+  - 'interface:etcd'
+  - 'interface:kubernetes-workload'
 repo: https://github.com/mbruzek/layer-k8s.git
 options:
   storage:

@@ -15,10 +15,15 @@ from charms.kubernetes.workload import service_name, node_port
 @when('workload.create')
 def workload_create(k):
     try:
-        service_file = os.path.join(hookenv.charm_dir(), 'workload.yaml')
-        with open(service_file, 'r') as f:
-            contents = f.read()
-            k.set_service(name=service_name(), contents=contents)
+        for fn in ('workload.yaml', 'workload.json'):
+            service_file = os.path.join(hookenv.charm_dir(), fn)
+            if os.path.exists(service_file):
+                with open(service_file, 'r') as f:
+                    contents = f.read()
+                    k.set_service(name=service_name(), contents=contents)
+                    return
+        # TODO(cmars): raise exception because at this point we don't have a
+        # workload to create
     finally:
         remove_state('workload.create')
 

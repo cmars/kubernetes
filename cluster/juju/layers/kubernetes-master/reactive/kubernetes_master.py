@@ -294,8 +294,9 @@ def create_self_config(ca, client):
     build_kubeconfig(server)
 
 
-@when('workload.load', 'kube-dns.available')
+@when('workload.load')
 def load_workload(kwl):
+    svc_file = None
     try:
         svc_file = kwl.service_file()
         if not svc_file:
@@ -306,7 +307,8 @@ def load_workload(kwl):
         set_state('workload.loaded')
     finally:
         remove_state('workload.load')
-        os.unlink(svc_file)
+        if svc_file:
+            os.unlink(svc_file)
  
 
 def stat_workload(kwl):
@@ -321,6 +323,7 @@ def stat_workload(kwl):
 
 @when('workload.unload')
 def unload_workload(kwl):
+    svc_file = None
     try:
         svc_file = kwl.service_file()
         if not svc_file:
@@ -328,7 +331,8 @@ def unload_workload(kwl):
         call(['kubectl', 'delete', '-f', svc_file])
     finally:
         remove_state('workload.unload')
-        os.unlink(svc_file)
+        if svc_file:
+            os.unlink(svc_file)
 
 
 def launch_dns():

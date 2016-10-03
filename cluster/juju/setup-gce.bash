@@ -8,8 +8,8 @@ export CHARM_DIR=${HERE}/builds
 # Generate local bundle. `snap install j2`. Needs CHARM_DIR set.
 j2 local-bundle.yaml.j2 > local-bundle.yaml
 
-(juju controllers --format json | jq -r '.controllers|keys|.[]' | grep k8s) || juju bootstrap k8s canonistack/lcy02
-juju switch k8s
+(juju controllers --format json | jq -r '.controllers|keys|.[]' | grep k8s-gce) || juju bootstrap k8s-gce google
+juju switch k8s-gce
 
 # Download kubernetes if we don't have it yet.
 if [ ! -f kubernetes.tar.gz ]; then
@@ -23,7 +23,7 @@ juju deploy local-bundle.yaml
 juju attach kubernetes-master kubernetes=kubernetes-master.tar.gz
 juju attach kubernetes-worker kubernetes=kubernetes-worker.tar.gz
 
-juju deploy ${CHARM_DIR}/inception --resource=inception_demo.tar.gz
+juju deploy ${CHARM_DIR}/inception
 juju add-relation inception:workload kubernetes-master:workload
 juju add-relation inception:node-guest kubernetes-worker:node-host
 

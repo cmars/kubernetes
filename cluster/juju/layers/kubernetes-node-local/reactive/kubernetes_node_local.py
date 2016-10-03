@@ -1,4 +1,4 @@
-from subprocess import check_call
+from subprocess import check_call, Popen, PIPE
 
 from charmhelpers.core import hookenv
 from charmhelpers.core.unitdata import kv
@@ -19,12 +19,20 @@ def install_kubernetes_node_local():
 
 
 def load_image_file(fn):
-    check_call(['docker', 'load', '-i', fn], shell=False)
+    if fn.endswith(".gz"):
+        p1 = Popen(["gunzip", "-dc", fn], stdout=PIPE)
+        p2 = Popen(['docker', 'load'], stdin=p1.stdout, stdout=PIPE)
+        p2.communicate()
+        p2.check_returncode()
+    else:
+        check_call(['docker', 'load', '-i', fn], shell=False)
 
 
 def load_image_rc(rc):
     rcfile = hookenv.resource_get(rc)
-    load_image_file(rcfile)
+    if rcfile:
+        load_image_file(rcfile)
+    raise Exception("resource not available")
 
 
 @when('workload.service.available')

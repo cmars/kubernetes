@@ -1,0 +1,10 @@
+includes:
+    - layer:kubernetes-node-local
+options:
+    kubernetes-workload:
+        service: inception-service
+    kubernetes-node-local:
+        image-resources:
+            - inception_demo
+        #image-files:
+            #- inception_demo.tar.gz

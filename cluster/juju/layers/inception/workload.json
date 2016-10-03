@@ -1,0 +1,62 @@
+{
+  "apiVersion": "v1",
+  "kind": "ReplicationController",
+  "metadata": {
+    "name": "inception-controller"
+  },
+  "spec": {
+    "replicas": 3,
+    "selector": {
+      "worker": "inception-pod"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "worker": "inception-pod"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "inception-container",
+            "image": "inception_demo:latest",
+			"imagePullPolicy": "Never",
+            "command": [
+              "/bin/sh",
+              "-c"
+            ],
+            "args": [
+              "/serving/bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --port=9000 --model_name=inception --model_base_path=/serving/inception-export"
+            ],
+            "ports": [
+              {
+                "containerPort": 9000
+              }
+            ]
+          }
+        ],
+        "restartPolicy": "Always"
+      }
+    }
+  }
+}
+
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "inception-service"
+  },
+  "spec": {
+    "ports": [
+      {
+        "port": 9000,
+        "targetPort": 9000
+      }
+    ],
+    "selector": {
+      "worker": "inception-pod"
+    },
+    "type": "LoadBalancer"
+  }
+}

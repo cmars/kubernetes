@@ -304,9 +304,12 @@ def load_workload(kwl):
         call(['kubectl', 'create', '-f', svc_file])
         # TODO(cmars): trigger `kubectl refresh` if already created? On remote upgrade-charm?
         stat_workload(kwl)
-        set_state('workload.loaded')
-    finally:
         remove_state('workload.load')
+        set_state('workload.loaded')
+    except Exception as e:
+        hookenv.log('kubectl command failed, not ready to create/stat service yet')
+        hookenv.log(e)
+    finally:
         if svc_file:
             os.unlink(svc_file)
  

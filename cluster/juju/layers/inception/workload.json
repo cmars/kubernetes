@@ -19,8 +19,7 @@
         "containers": [
           {
             "name": "inception-container",
-            "image": "inception_demo:latest",
-			"imagePullPolicy": "Never",
+            "image": "docker.io/cmars/tensorflow:inception_demo",
             "command": [
               "/bin/sh",
               "-c"

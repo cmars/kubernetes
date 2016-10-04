@@ -1,17 +1,11 @@
-name: image-classifier
+name: inception
 summary: A Tensorflow model trained to classify images, as a service
 maintainer: Casey Marshall <casey.marshall@canonical.com>
 description: |
-  This charm deploys a trained inception Tensorflow model as a service into a
-  Kubernetes cluster. The model has been trained on an MNIST data set to classify
-  images.
+  This charm deploys a Tensorflow inception model trained to classify images,
+  as a service.
 provides:
   image-classifier:
     interface: tensorflow-serving-api
 series:
   - xenial
-resources:
-  inception_demo:
-    type: file
-    filename: inception_demo.tar.gz
-    description: "Docker container image containing Tensorflow server with trained inceptionv3 model"

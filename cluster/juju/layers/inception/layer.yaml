@@ -1,5 +1,6 @@
 includes:
     - layer:kubernetes-node-local
+    - interface:tf-inception-api
 options:
     kubernetes-workload:
         service: inception-service

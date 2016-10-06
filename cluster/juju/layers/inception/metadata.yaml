@@ -5,7 +5,7 @@ description: |
   This charm deploys a Tensorflow inception model trained to classify images,
   as a service.
 provides:
-  image-classifier:
-    interface: tensorflow-serving-api
+  serving:
+    interface: tf-inception-api
 series:
   - xenial

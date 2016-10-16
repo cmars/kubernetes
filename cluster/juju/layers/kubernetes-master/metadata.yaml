@@ -19,6 +19,8 @@ series:
 provides:
   kube-api-endpoint:
     interface: http
+  kube-api-server:
+    interface: kube-api
   sdn-plugin:
     interface: sdn-plugin
     scope: container

@@ -6,6 +6,7 @@ includes:
   - 'interface:http'
   - 'interface:sdn-plugin'
   - 'interface:kube-dns'
+  - 'interface:kube-api'
   - 'interface:ceph-admin'
   - 'interface:public-address'
 options:

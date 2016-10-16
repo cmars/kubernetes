@@ -26,6 +26,9 @@ from charmhelpers.core.templating import render
 from charmhelpers.fetch import apt_install
 
 
+KUBE_HOME = '/home/ubuntu'
+
+
 @hook('upgrade-charm')
 def reset_states_for_delivery():
     '''An upgrade charm event was triggered by Juju, react to that here.'''
@@ -288,6 +291,7 @@ def loadbalancer_kubeconfig(loadbalancer, ca, client):
     port = hosts[0].get('port')
     server = 'https://{0}:{1}'.format(address, port)
     build_kubeconfig(server)
+    set_state('kube-api.available')
 
 
 @when('kubernetes-master.components.installed',
@@ -297,6 +301,23 @@ def create_self_config(ca, client):
     '''Create a kubernetes configuration for the master unit.'''
     server = 'https://{0}:{1}'.format(hookenv.unit_get('public-address'), 6443)
     build_kubeconfig(server)
+    set_state('kube-api.available')
+
+
+def kubeconfig_path():
+    # Create an absolute path for the kubeconfig file.
+    kubeconfig_path = os.path.join(KUBE_HOME, 'config')
+    return kubeconfig_path
+
+
+@when('kube-api.available', 'kube-api-server.connected')
+def update_kubeconfig(srv):
+    kubecfg_path = kubeconfig_path()
+    if not os.path.exists(kubecfg_path):
+        return
+    with open(kubecfg_path, 'r') as f:
+        srv.kubeconfig(f.read())
+        remove_state('kube-api.available')
 
 
 @when('ceph-storage.available')
@@ -449,18 +470,15 @@ def build_kubeconfig(server):
         # Cache last server string to know if we need to regenerate the config.
         if not data_changed('kubeconfig.server', server):
             return
-        # The final destination of the kubeconfig and kubectl.
-        destination_directory = '/home/ubuntu'
-        # Create an absolute path for the kubeconfig file.
-        kubeconfig_path = os.path.join(destination_directory, 'config')
+        kubecfg_path = kubeconfig_path()
         # Create the kubeconfig on this system so users can access the cluster.
-        create_kubeconfig(kubeconfig_path, server, ca, key, cert)
+        create_kubeconfig(kubecfg_path, server, ca, key, cert)
         # Copy the kubectl binary to the destination directory.
         cmd = ['install', '-v', '-o', 'ubuntu', '-g', 'ubuntu',
-               '/usr/local/bin/kubectl', destination_directory]
+               '/usr/local/bin/kubectl', KUBE_HOME]
         check_call(cmd)
         # Make the config file readable by the ubuntu users so juju scp works.
-        cmd = ['chown', 'ubuntu:ubuntu', kubeconfig_path]
+        cmd = ['chown', 'ubuntu:ubuntu', kubecfg_path]
         check_call(cmd)
 
 

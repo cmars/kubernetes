@@ -1,0 +1,4 @@
+name: kube-api
+summary: provides kubernetes API connection configuration
+version: 1
+maintainer: Casey Marshall <casey.marshall@canonical.com>

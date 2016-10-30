@@ -292,6 +292,7 @@ def loadbalancer_kubeconfig(loadbalancer, ca, client):
     server = 'https://{0}:{1}'.format(address, port)
     build_kubeconfig(server)
     set_state('kube-api.available')
+    set_state('kube-api.changed')
 
 
 @when('kubernetes-master.components.installed',
@@ -302,6 +303,7 @@ def create_self_config(ca, client):
     server = 'https://{0}:{1}'.format(hookenv.unit_get('public-address'), 6443)
     build_kubeconfig(server)
     set_state('kube-api.available')
+    set_state('kube-api.changed')
 
 
 def kubeconfig_path():
@@ -310,14 +312,27 @@ def kubeconfig_path():
     return kubeconfig_path
 
 
-@when('kube-api.available', 'kube-api-server.connected')
+@when('kube-api.changed', 'kube-api-server.connected')
 def update_kubeconfig(srv):
+    """Update the kubeconfig for connected clients when it becomes available or
+    changes."""
+
     kubecfg_path = kubeconfig_path()
     if not os.path.exists(kubecfg_path):
         return
     with open(kubecfg_path, 'r') as f:
-        srv.kubeconfig(f.read())
-        remove_state('kube-api.available')
+        if srv.kubeconfig(f.read()):
+            remove_state('kube-api.changed')
+
+
+@when('kube-api.available', 'kube-api-server.wants-status')
+def provide_service_status(srv):
+    """Provide clients with service status."""
+
+    status_json = check_output(['kubectl', 'get', 'svc', srv.service_name(), '-o', 'json'],
+        universal_newlines=True)
+    if srv.status(status_json):
+        remove_state('kube-api-server.wants-status')
 
 
 @when('ceph-storage.available')

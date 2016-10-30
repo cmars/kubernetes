@@ -2,10 +2,13 @@ import os
 import shutil
 from subprocess import check_call, check_output
 
+from charmhelpers.core import hookenv
+from charmhelpers.core.unitdata import kv
+from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
+
 from charms.reactive import when, when_not, set_state, remove_state, hook, is_state
 
-from charmhelpers.core import hookenv
-from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
+from charms.kubernetes import service_name
 
 
 @hook('upgrade-charm')
@@ -31,30 +34,38 @@ def install_kube_workload():
 
     shutil.copyfile(kubectl, '/usr/local/bin/kubectl')
     os.chmod('/usr/local/bin/kubectl', 0o755)
+    set_state('kube-workload.available')
 
 
-@when('kube-api-client.available', 'kube-workload.available')
+@when('kube-api-client.connected', 'kube-workload.available')
 @when_not('kube-workload.configured')
 def configure_kubectl(kube):
+    if not kube.kubeconfig():
+        return
     os.makedirs('/root/.kube', exist_ok=True)
     with open('/root/.kube/config', 'w') as f:
         f.write(kube.kubeconfig())
     set_state('kube-workload.configured')
-    remove_state('kube-api-client.available')
 
 
-@when('kube-api-client.available', 'kube-workload.configured')
-def reconfigure_kubectl(_):
-    remove_state('kube-workload.configured')
-
-
-@when('kube-api-client.available', 'kube-workload.configured')
+@when('kube-api-client.connected', 'kube-workload.configured')
 @when_not('kube-workload.created')
 def create_workload(kube):
     wf = workload_file()
     if wf:
         check_call(['kubectl', 'create', '-f', wf], shell=True)
+        kube.created(service_name())
         set_state('kube-workload.created')
+
+
+@when('kube-api-client.connected', 'kube-workload.created')
+@when_not('kube-workload.status.available')
+def stat_workload(kube):
+    status = kube.status()
+    if status:
+        db = kv()
+        db.set('kube-workload.status', status)
+        set_state('kube-workload.status.available')
 
 
 @when('kube-workload.available', 'kube-workload.created', 'kube-workload.updated')

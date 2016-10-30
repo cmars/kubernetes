@@ -1,34 +1,33 @@
-#!/usr/bin/env python3
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from charms.reactive import RelationBase
 from charms.reactive import hook
 from charms.reactive import scopes
 
 
 class KubeAPIProvider(RelationBase):
-    scope = scopes.GLOBAL
+    scope = scopes.SERVICE
 
-    @hook('{provides:kube-api}-relation-{joined,changed}')
+    @hook('{provides:kube-api}-relation-changed')
     def joined_or_changed(self):
         conv = self.conversation()
+        if conv.get_remote('service_name'):
+            conv.set_state('{relation_name}.wants-status')
         conv.set_state('{relation_name}.connected')
 
-    @hook('{provides:kube-api}-relation-{departed}')
+    @hook('{provides:kube-api}-relation-departed')
     def departed(self):
         conv = self.conversation()
         conv.remove_state('{relation_name}.connected')
 
     def kubeconfig(self, kubecfg):
         conv = self.conversation()
-        conv.set_remote(kubeconfig=kubecfg)
+        conv.set_remote(kubeconfig=kubecfg, scope=scopes.GLOBAL)
+        return True
+
+    def service_name(self):
+        conv = self.conversation()
+        return conv.get_remote('service_name')
+
+    def status(self, status):
+        conv = self.conversation()
+        conv.set_remote(status=status)
+        return True

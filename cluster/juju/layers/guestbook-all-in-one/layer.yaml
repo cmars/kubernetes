@@ -1,0 +1,6 @@
+includes:
+    - layer:kube-workload
+    - interface:http
+options:
+    kube-workload:
+        service: frontend

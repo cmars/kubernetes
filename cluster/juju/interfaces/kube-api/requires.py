@@ -1,15 +1,4 @@
-#!/usr/bin/python
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import json
 
 from charms.reactive import RelationBase
 from charms.reactive import hook
@@ -17,9 +6,9 @@ from charms.reactive import scopes
 
 
 class KubeAPIRequireer(RelationBase):
-    scope = scopes.GLOBAL
+    scope = scopes.SERVICE
 
-    @hook('{requires:kube-api}-relation-{joined,changed}')
+    @hook('{requires:kube-api}-relation-changed')
     def joined_or_changed(self):
         conv = self.conversation()
         conv.set_state('{relation_name}.available')
@@ -30,6 +19,17 @@ class KubeAPIRequireer(RelationBase):
         conv = self.conversation()
         conv.remove_state('{relation_name}.connected')
 
+    def created(self, service_name):
+        conv = self.conversation()
+        conv.set_remote(service_name=service_name)
+
     def kubeconfig(self):
         conv = self.conversation()
         return conv.get_remote('kubeconfig')
+
+    def status(self):
+        conv = self.conversation()
+        status_json = self.get_remote('status')
+        if status_json:
+            return json.loads(status_json)
+        return None
